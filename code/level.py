@@ -1,6 +1,7 @@
 import pygame
 from settings import *
 from player import Player
+from overlay import Overlay
 
 
 class Level:
@@ -13,6 +14,7 @@ class Level:
         self.all_sprites = pygame.sprite.Group()
     
         self.setup()
+        self.overlay = Overlay(self.player)
         
         
     def setup(self): #incia nosso player no level
@@ -24,3 +26,4 @@ class Level:
         self.all_sprites.draw(self.display_surface) #faz com que os sprites apareçam na tela
         self.all_sprites.update(dt) #atualiza todos os sprites
         
+        self.overlay.display()
