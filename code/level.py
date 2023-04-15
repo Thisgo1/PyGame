@@ -1,9 +1,10 @@
 import pygame
-import pytmx.util_pygame import load_pygame
+from pytmx.util_pygame import load_pygame
 from settings import *
 from player import Player
 from overlay import Overlay
-from sprites import Generic
+from sprites import Generic, Water, WildFlower, Tree
+from support import *
 
 
 class Level:
@@ -19,6 +20,37 @@ class Level:
         self.overlay = Overlay(self.player)
 
     def setup(self):  # incia nosso player no level
+        tmx_data = load_pygame('../data/map.tmx')
+
+        # casa
+        for layer in ['HouseFloor', 'HouseFurnitureBottom']:
+            for x, y, surf in tmx_data.get_layer_by_name(layer).tiles():
+                Generic((x * TILE_SIZE, y * TILE_SIZE), surf,
+                        self.all_sprites, LAYERS['house bottom'])
+
+        for layer in ['HouseWalls', 'HouseFurnitureTop']:
+            for x, y, surf in tmx_data.get_layer_by_name(layer).tiles():
+                Generic((x * TILE_SIZE, y * TILE_SIZE), surf,
+                        self.all_sprites, LAYERS['main'])
+        # cerca
+        for x, y, surf in tmx_data.get_layer_by_name('Fence').tiles():
+            Generic((x * TILE_SIZE, y * TILE_SIZE), surf,
+                    self.all_sprites)
+
+        # água
+        water_frames = import_folder('../graphics/water')
+        for x, y, surf in tmx_data.get_layer_by_name('Water').tiles():
+            Water((x * TILE_SIZE, y * TILE_SIZE), water_frames,
+                  self.all_sprites)
+
+        # Flores e companhia
+        for obj in tmx_data.get_layer_by_name('Decoration'):
+            WildFlower((obj.x, obj.y), obj.image, self.all_sprites)
+        
+        #arvores
+        for obj in tmx_data.get_layer_by_name('Trees'):
+            Tree((obj.x, obj.y), obj.image, self.all_sprites, obj.name)
+
         self.player = Player((640, 360), self.all_sprites)
         Generic(
             pos=(0, 0),
@@ -31,9 +63,9 @@ class Level:
     def run(self, dt):
         # torna a tela preta para que não se perceba a mudança de frames
         self.display_surface.fill('black')
-        self.all_sprites.custom_draw(self.player)  # faz com que os sprites apareçam na tela
+        # faz com que os sprites apareçam na tela
+        self.all_sprites.custom_draw(self.player)
         self.all_sprites.update(dt)  # atualiza todos os sprites
-
         self.overlay.display()
 
 
@@ -44,15 +76,12 @@ class CameraGroup(pygame.sprite.Group):
         self.offset = pygame.math.Vector2()
 
     def custom_draw(self, player):
-      self.offset.x = player.rect.centerx - LARGURA_DA_TELA / 2
-      self.offset.y = player.rect.centery - ALTURA_DA_TELA / 2
-      
-      for layer in LAYERS.values():
-        for sprite in self.sprites():
-            if sprite.z == layer:
-              offset_rect = sprite.rect.copy()
-              offset_rect.center -= self.offset
-              self.display_surface.blit(sprite.image, offset_rect)
+        self.offset.x = player.rect.centerx - LARGURA_DA_TELA / 2
+        self.offset.y = player.rect.centery - ALTURA_DA_TELA / 2
 
-
-  
+        for layer in LAYERS.values():
+            for sprite in sorted(self.sprites(), key= lambda sprite:sprite.rect.centery):
+                if sprite.z == layer:
+                    offset_rect = sprite.rect.copy()
+                    offset_rect.center -= self.offset
+                    self.display_surface.blit(sprite.image, offset_rect)
