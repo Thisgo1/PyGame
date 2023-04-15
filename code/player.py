@@ -6,9 +6,9 @@ from support import *
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos, group):
         super().__init__(group)
-        
+
         self.import_assets()
-        self.status = 'down_idle'
+        self.status = 'down'
         self.frame_index = 0
 
         # setup geral
@@ -26,18 +26,29 @@ class Player(pygame.sprite.Sprite):
         # vertical
         if keys[pygame.K_UP] or keys[pygame.K_w]:
             self.direction.y = -1
+            self.status = 'up'
         elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
             self.direction.y = 1
+            self.status = 'down'
         else:
             self.direction.y = 0
 
         # horizontal
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             self.direction.x = -1
+            self.status = 'left'
         elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             self.direction.x = 1
+            self.status = 'right'
         else:
             self.direction.x = 0
+
+    def get_status(self):
+        # checa se o jogador esta se mexendo, e depois adicionar _idle ao status
+        # idle
+        if self.direction == [0, 0] and "_idle" not in self.status:
+            self.status += "_idle"
+        # uso de ferramentas
 
     def import_assets(self):
         self.animations = {'up': [], 'down': [], 'left': [], 'right': [],
@@ -45,10 +56,18 @@ class Player(pygame.sprite.Sprite):
                            'right_hoe': [], 'left_hoe': [], 'up_hoe': [], 'down_hoe': [],
                            'right_axe': [], 'left_axe': [], 'up_axe': [], 'down_axe': [],
                            'right_water': [], 'left_water': [], 'up_water': [], 'down_water': []}
-        
+
         for animation in self.animations.keys():
             full_path = '../graphics/character/' + animation
             self.animations[animation] = import_folder(full_path)
+
+    def animate(self, dt):
+        self.frame_index += 4 * dt
+        if self.frame_index >= len(self.animations[self.status]):
+            # como temos um número finito de sprites, sempre recomeçamos as animações
+            self.frame_index = 0
+
+        self.image = self.animations[self.status][int(self.frame_index)]
 
     def move(self, dt):
 
@@ -67,3 +86,6 @@ class Player(pygame.sprite.Sprite):
     def update(self, dt):
         self.input()
         self.move(dt)
+        self.animate(dt)
+        self.get_status()
+        print(self.status)
