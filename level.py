@@ -22,5 +22,5 @@ class Level:
     def run(self, dt):
         self.display_surface.fill('black') #torna a tela preta para que não se perceba a mudança de frames
         self.all_sprites.draw(self.display_surface) #faz com que os sprites apareçam na tela
-        self.all_sprites.update() #atualiza todos os sprites
+        self.all_sprites.update(dt) #atualiza todos os sprites
         
