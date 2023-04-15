@@ -9,7 +9,7 @@ class Player(pygame.sprite.Sprite):
         # setup geral
         self.image = pygame.Surface((32, 64))
         self.image.fill('blue')
-        self.rect = self.image.get_rect(center = pos)
+        self.rect = self.image.get_rect(center=pos)
 
         # atributos para movimento
         self.direction = pygame.math.Vector2()
@@ -34,19 +34,28 @@ class Player(pygame.sprite.Sprite):
             self.direction.x = 1
         else:
             self.direction.x = 0
-        
+
+    def import_assets(self):
+        self.animations = {'up': [], 'down': [], 'left': [], 'right': [],
+                           'right_idle': [], 'left_idle': [], 'up_idle': [], 'down_idle': [],
+                           'right_hoe': [], 'left_hoe': [], 'up_hoe': [], 'down_hoe': [],
+                           'right_axe': [], 'left_axe': [], 'up_axe': [], 'down_axe': [],
+                           'right_water': [], 'left_water': [], 'up_water': [], 'down_water': []}
+        for animation in self.animations.keys()
+          full_path = ''
+
     def move(self, dt):
-      
-      #normalizing a vector / normalizando um vetor
+
+        # normalizing a vector / normalizando um vetor
         if self.direction.magnitude() > 0:
-          self.direction = self.direction.normalize()
-        
-        #movimento horizontal
-        self.pos.x += self.direction.x *self.speed *dt
+            self.direction = self.direction.normalize()
+
+        # movimento horizontal
+        self.pos.x += self.direction.x * self.speed * dt
         self.rect.centerx = self.pos.x
-        
-        #movimento vertical
-        self.pos.y += self.direction.y *self.speed *dt
+
+        # movimento vertical
+        self.pos.y += self.direction.y * self.speed * dt
         self.rect.centery = self.pos.y
 
     def update(self, dt):
