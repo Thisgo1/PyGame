@@ -1,4 +1,5 @@
 import pygame
+import pytmx.util_pygame import load_pygame
 from settings import *
 from player import Player
 from overlay import Overlay
