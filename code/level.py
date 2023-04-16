@@ -7,7 +7,6 @@ from sprites import Generic, Water, WildFlower, Tree
 from support import *
 
 
-
 class Level:
     def __init__(self) -> None:
 
@@ -44,26 +43,35 @@ class Level:
         water_frames = import_folder('../graphics/water')
         for x, y, surf in tmx_data.get_layer_by_name('Water').tiles():
             Water((x * TILE_SIZE, y * TILE_SIZE), water_frames,
-                    self.all_sprites)
+                  self.all_sprites)
 
         # Flores e companhia
         for obj in tmx_data.get_layer_by_name('Decoration'):
-            WildFlower((obj.x, obj.y), obj.image, [self.all_sprites, self.collision_sprites])
+            WildFlower((obj.x, obj.y), obj.image, [
+                       self.all_sprites, self.collision_sprites])
 
         # arvores
         for obj in tmx_data.get_layer_by_name('Trees'):
-            Tree((obj.x, obj.y), obj.image, [self.all_sprites, self.collision_sprites, self.tree_sprites], obj.name)
-        
-        #camada de colisões
-        for x,y,surf in tmx_data.get_layer_by_name('Collision').tiles():
-            Generic((x*TILE_SIZE,y*TILE_SIZE), pygame.Surface((TILE_SIZE, TILE_SIZE)), self.collision_sprites)
-        
+            Tree(
+                pos=(obj.x, obj.y),
+                surf=obj.image,
+                groups=[self.all_sprites,
+                        self.collision_sprites, self.tree_sprites],
+                name=obj.name,
+                player_add=self.player_add
+            )
+
+        # camada de colisões
+        for x, y, surf in tmx_data.get_layer_by_name('Collision').tiles():
+            Generic((x*TILE_SIZE, y*TILE_SIZE),
+                    pygame.Surface((TILE_SIZE, TILE_SIZE)), self.collision_sprites)
+
         # player
         for obj in tmx_data.get_layer_by_name('Player'):
             if obj.name == 'Start':
                 self.player = Player(
-                    (obj.x, obj.y), 
-                    self.all_sprites, 
+                    (obj.x, obj.y),
+                    self.all_sprites,
                     self.collision_sprites,
                     self.tree_sprites)
         Generic(
@@ -73,6 +81,9 @@ class Level:
             groups=self.all_sprites,
             z=LAYERS['ground'])
         # cria uma instancia da classe player
+
+    def player_add(self, item, count=1):
+        self.player.item_inventory[item] += count
 
     def run(self, dt):
         # torna a tela preta para que não se perceba a mudança de frames
@@ -99,8 +110,8 @@ class CameraGroup(pygame.sprite.Group):
                     offset_rect = sprite.rect.copy()
                     offset_rect.center -= self.offset
                     self.display_surface.blit(sprite.image, offset_rect)
-                
-                #analytics
+
+                # analytics
                 # if sprite == player:
                 #     pygame.draw.rect(self.display_surface, 'red', offset_rect,5)
                 #     hitbox_rect = player.hitbox.copy()
