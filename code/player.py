@@ -5,8 +5,8 @@ from timer import Timer
 
 
 class Player(pygame.sprite.Sprite):
-    
-    def __init__(self, pos, group):
+
+    def __init__(self, pos, group, collision_sprites):
         super().__init__(group)
 
         self.import_assets()
@@ -16,12 +16,18 @@ class Player(pygame.sprite.Sprite):
         # setup geral
         self.image = self.animations[self.status][self.frame_index]
         self.rect = self.image.get_rect(center=pos)
+
         self.z = LAYERS['main']
 
         # atributos para movimento
         self.direction = pygame.math.Vector2()
         self.pos = pygame.math.Vector2(self.rect.center)
         self.speed = 200
+
+        # colisão
+
+        self.collision_sprites = collision_sprites
+        self.hitbox = self.rect.copy().inflate((-126, -70))
 
         # timers
         self.timers = {
@@ -31,10 +37,10 @@ class Player(pygame.sprite.Sprite):
             'seed switch': Timer(200)
         }
         # ferramentas
-        self.tools = ['axe','hoe','water']
+        self.tools = ['axe', 'hoe', 'water']
         self.tool_index = 0
         self.selected_tool = self.tools[self.tool_index]
-        
+
         # sementes
         self.seeds = ['corn', 'tomato']
         self.seed_index = 0
@@ -42,6 +48,7 @@ class Player(pygame.sprite.Sprite):
 
     def use_tool(self):
         pass
+
     def use_seed(self):
         pass
 
@@ -69,7 +76,7 @@ class Player(pygame.sprite.Sprite):
                 self.status = 'right'
             else:
                 self.direction.x = 0
-            
+
             # ferramentas
             # uso de ferramentas
             if keys[pygame.K_SPACE]:
@@ -80,25 +87,24 @@ class Player(pygame.sprite.Sprite):
             if keys[pygame.K_q] and not self.timers['tool switch'].active:
                 self.timers['tool switch'].activate()
                 self.tool_index += 1
-                self.tool_index = self.tool_index if self.tool_index < len(self.tools) else 0
+                self.tool_index = self.tool_index if self.tool_index < len(
+                    self.tools) else 0
                 self.selected_tool = self.tools[self.tool_index]
-            
+
             # sementes
             # usar sementes
             if keys[pygame.K_LCTRL]:
                 self.timers['seed use'].activate()
                 self.direction = pygame.math.Vector2()
                 self.frame_index = 0
-        
-                
+
             # mudar sementes
             if keys[pygame.K_e] and not self.timers['seed switch'].active:
                 self.timers['seed switch'].activate()
-                self.seed_index +=1
-                self.seed_index = self.seed_index if self.seed_index < len(self.seeds) else 0
+                self.seed_index += 1
+                self.seed_index = self.seed_index if self.seed_index < len(
+                    self.seeds) else 0
                 self.selected_seed = self.seeds[self.seed_index]
-        
-
 
     def get_status(self):
         # checa se o jogador esta se mexendo, e depois adicionar _idle ao status
@@ -139,15 +145,39 @@ class Player(pygame.sprite.Sprite):
 
         # movimento horizontal
         self.pos.x += self.direction.x * self.speed * dt
-        self.rect.centerx = self.pos.x
+        self.hitbox.centerx = round(self.pos.x)
+        self.rect.centerx = self.hitbox.centerx
+        self.collision('horizontal')
 
         # movimento vertical
         self.pos.y += self.direction.y * self.speed * dt
-        self.rect.centery = self.pos.y
+        self.hitbox.centery = round(self.pos.y)
+        self.rect.centery = self.hitbox.centery
+        self.collision('vertical')
 
     def update_timers(self):
         for timer in self.timers.values():
             timer.update()
+
+    def collision(self, direction):
+        for sprite in self.collision_sprites.sprites():
+            if hasattr(sprite, 'hitbox'):
+                if sprite.hitbox.colliderect(self.hitbox):
+                    if direction == 'horizontal':
+                        if self.direction.x > 0: #indo para direita
+                            self.hitbox.right = sprite.hitbox.left
+                        if self.direction.x < 0: #indo para esquerda
+                            self.hitbox.left = sprite.hitbox.right
+                        self.rect.centerx = self.hitbox.centerx
+                        self.pos.x = self.hitbox.centerx
+                    if direction == 'vertical':
+                        if self.direction.y > 0: #indo para baixo
+                            self.hitbox.bottom = sprite.hitbox.top
+                        if self.direction.y < 0: #indo para cima
+                            self.hitbox.top = sprite.hitbox.bottom
+                        self.rect.centery = self.hitbox.centery
+                        self.pos.y = self.hitbox.centery
+                        
 
     def update(self, dt):
         self.input()
